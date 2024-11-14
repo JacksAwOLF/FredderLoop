@@ -1,9 +1,12 @@
-Building:
+# FredderLoop
+FredderLoop is a free alternative to LetterLoop which is only free for the first two issues. FredderLoop helps individuals update each other in monthly issues with all the spicy tea and pics from the previous month.
+
+## Building:
 
 Every push to main will update the crontab code on the Ubuntu server
 the cronjobs to run are in the file cronjobs
 
-Architecture Proposal:
+## Architecture Proposal:
 
 schedule python scripts to run periodically with crontab -e on ubuntu server
 
@@ -55,3 +58,54 @@ defaultForm.py
 
 discordBot.py
 - has a function to send a single message to discord server
+
+## Local Development:
+
+### Requirements:
+
+* python3 >= 3.10.7
+* pip
+* python3.10-venv
+* Google Cloud project
+* Google credentials
+* Google service account
+
+### Setting up the Google Cloud project/credentials
+
+This [python quickstart guide](https://developers.google.com/forms/api/quickstart/python) can be used as a reference for most of the steps. Deviations or additional steps are noted below
+
+#### API Scopes
+
+Below are the required API scopes for this project.
+
+* Google Forms API - Used to interact with Google Forms
+* Google Drive API - `https://www.googleapis.com/auth/drive.file`, Create new Drive files, or modify existing files, that you open with an app or that the user shares with an app while using the Google Picker API or the app's file picker.
+
+### config.py:
+
+`config.py` should be used to store credentials, but should NEVER be pushed with production secrets.
+
+**Note**: The credentials and tokens do not need to be generated to modify a current setup and instructions are present for creating your own setup.
+
+```
+SERVICE_ACCOUNT_CREDENTIALS=<name of json file containing service account key>
+GOOGLE_DRIVE_FOLDER_ID=<last segment of google drive folder url (after last "/")>
+DISCORD_LETTERLOOP_CHANNEL_ID=<last segment of discord channel in browser version (after last "/")>
+BOT_TOKEN=<from discord bot>
+```
+
+### SERVICE_ACCOUNT_CREDENTIALS
+
+Follow the Google Forms quickstart guide and you can download this json file after adding a key to the service account.
+
+### local environment
+
+Use the following to create and start a virtual environment with the required python libraries installed.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**Note**: Use `deactivate` to exit out of the virtual environment
