@@ -6,6 +6,6 @@
 # | └──────── Hour (0 - 23)
 # └────────── Minute (0 - 59)
 
-7 40 1 * * source /home/pi/FredderLoop/.venv/bin/activate && python3 /home/pi/FredderLoop/createForm.py >> /home/pi/FredderLoop/logs/createForm.logs 2>&1
+0 0 1 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 createForm.py >> logs/createForm.logs 2>&1
 0 0 21 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 collectResponses.py >> logs/collectResponses.logs 2>&1
 0 0 28 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 shareResponses.py >> logs/shareResponses.logs 2>&1
