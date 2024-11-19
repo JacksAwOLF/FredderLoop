@@ -7,5 +7,3 @@ SERVICES = {
     DOCS_SERVICE: "v1",
     FORMS_SERVICE: "v1",
 }
-
-WRITER_PERMISSION = "writer"

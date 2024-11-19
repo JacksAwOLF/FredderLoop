@@ -1,7 +1,23 @@
+# docs documentation: https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
+
+# constants
+TITLE = "TITLE"
+HEADING_1 = "HEADING_1"
+HEADING_2 = "HEADING_2"
+HEADING_3 = "HEADING_3"
+NORMAL_TEXT = "NORMAL_TEXT"
+
+# https://developers.google.com/docs/api/reference/rest
+# https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
+def create_document(docs_service, title: str) -> any:
+    # returns document
+    body = {"title": title}
+    return docs_service.documents().create(body=body).execute()
+
 def _add_paragraph(
     text: str,
     curr_ind: int,
-    heading_type: str,
+    heading_type: str = NORMAL_TEXT,
     newline: bool = True,
 ) -> tuple[list, int]:
     requests = []
@@ -9,24 +25,25 @@ def _add_paragraph(
     if newline:
         new_text = f"{text}\n"
     change_len = len(text) + 1
+
     requests.append(
         {
             "insertText": {"text": new_text, "location": {"index": curr_ind}},
         }
     )
-    if heading_type:
-        requests.append(
-            {
-                "updateParagraphStyle": {
-                    "range": {
-                        "startIndex": curr_ind,
-                        "endIndex": curr_ind + change_len,
-                    },
-                    "fields": "namedStyleType",
-                    "paragraphStyle": {"namedStyleType": heading_type},
+
+    requests.append(
+        {
+            "updateParagraphStyle": {
+                "range": {
+                    "startIndex": curr_ind,
+                    "endIndex": curr_ind + change_len,
                 },
+                "fields": "namedStyleType",
+                "paragraphStyle": {"namedStyleType": heading_type},
             },
-        )
+        },
+    )
     return requests, curr_ind + change_len
 
 
@@ -36,6 +53,7 @@ def _add_table_answers(
     num_cols: int = 1,
     set_bg_color: bool = True,
 ) -> tuple[list, int]:
+    # originally meant to be general to support photos, that can be a TODO
     requests = []
     for name, answers in contents.items():
         num_rows = -(len(answers) // -num_cols)  # ceiling
@@ -44,7 +62,7 @@ def _add_table_answers(
         tmp, curr_ind = _add_paragraph(
             text=name,
             curr_ind=curr_ind,
-            heading_type="HEADING_2",
+            heading_type=HEADING_2,
             newline=True,
         )
         requests.extend(tmp)
@@ -75,6 +93,7 @@ def _add_table_answers(
             if (i_ans + 1) % num_cols == 0:  #
                 transformed_ans.append(tmp)
                 tmp = []
+
         if len(tmp) > 0:
             while len(tmp) < num_cols:
                 tmp.append("")
@@ -89,11 +108,12 @@ def _add_table_answers(
                 tmp, curr_ind = _add_paragraph(
                     text=ans,
                     curr_ind=curr_ind,
-                    heading_type="NORMAL_TEXT",
+                    heading_type=NORMAL_TEXT,
                     newline=False,
                 )
                 requests.extend(tmp)
 
+        # delete random newline from table insert
         requests.append(
             {
                 "deleteContentRange": {
@@ -106,6 +126,7 @@ def _add_table_answers(
             }
         )
 
+        # set background and border color (hardcoded magic numbers :])
         if set_bg_color:
             requests.append(
                 {
@@ -211,12 +232,13 @@ def _add_table_answers(
 
 
 def add_title(title: str, curr_ind: int) -> tuple[list, int]:
-    return _add_paragraph(text=title, curr_ind=curr_ind, heading_type="TITLE")
+    return _add_paragraph(text=title, curr_ind=curr_ind, heading_type=TITLE)
 
 
 def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
     requests = []
     ind_change = 0
+    # Since horizontal rule not supported by Google API, use table w/ top border
     requests.append(
         {
             "insertTable": {
@@ -229,6 +251,8 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
         },
     )
     ind_change += 5
+
+    # change color and reduce footprint: set font size to 3pt, remove padding
     requests.append(
         {
             "updateTableCellStyle": {
@@ -329,6 +353,8 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
             },
         },
     )
+
+    # make the line thicker
     requests.append(
         {
             "updateTextStyle": {
@@ -347,6 +373,7 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
         },
     )
 
+    # delete random newline from table insert
     requests.append(
         {
             "deleteContentRange": {
@@ -366,7 +393,7 @@ def add_response(response: dict, curr_index: int) -> tuple[list, int]:
     # add question
     question = list(response.keys())[0]
     tmp, curr_index = _add_paragraph(
-        text=question, curr_ind=curr_index, heading_type="HEADING_1"
+        text=question, curr_ind=curr_index, heading_type=HEADING_1
     )
     requests.extend(tmp)
 
@@ -384,7 +411,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
     # add question
     question = list(response.keys())[0]
     tmp, curr_ind = _add_paragraph(
-        text=question, curr_ind=curr_ind, heading_type="HEADING_1"
+        text=question, curr_ind=curr_ind, heading_type=HEADING_1
     )
     requests.extend(tmp)
 
@@ -396,7 +423,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
         tmp, curr_ind = _add_paragraph(
             text=name,
             curr_ind=curr_ind,
-            heading_type="HEADING_2",
+            heading_type=HEADING_2,
             newline=True,
         )
         requests.extend(tmp)
@@ -426,11 +453,14 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
             if (i_id + 1) % num_cols == 0:
                 transformed_ids.append(tmp)
                 tmp = []
+
+        # add remaining photos
         if len(tmp) > 0:
             while len(tmp) < num_cols:
                 tmp.append("")
             transformed_ids.append(tmp)
 
+        # add images to table/doc
         for row in transformed_ids:
             curr_ind += 1  # add index per row
             for photo_id in row:
@@ -455,6 +485,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
                 )
                 curr_ind += 1  # to account for image
 
+        # delete random newline from table insert
         requests.append(
             {
                 "deleteContentRange": {
@@ -466,6 +497,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
             },
         )
 
+        # remove all borders
         requests.append(
             {
                 "updateTableCellStyle": {
@@ -553,6 +585,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
 
         curr_ind += 1
 
+        # add newline after table for cleanliness
         tmp, curr_ind = _add_paragraph(
             text="", curr_ind=curr_ind, heading_type=""
         )  # add newline
@@ -561,6 +594,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
 
 
 def update_font(curr_ind: int) -> tuple[list, int]:
+    # I only want comic neue bolded, hardcoding it
     requests = []
     requests.append(
         {
@@ -573,7 +607,7 @@ def update_font(curr_ind: int) -> tuple[list, int]:
                 "textStyle": {
                     "weightedFontFamily": {
                         "fontFamily": "Comic Neue",
-                        "weight": 700, # 300 light, 400 regular, 700 bold
+                        "weight": 700,  # 300 light, 400 regular, 700 bold
                     }
                 },
             }
