@@ -7,5 +7,8 @@
 # └────────── Minute (0 - 59)
 
 0 0 1 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 createForm.py >> logs/createForm.logs 2>&1
+0 0 20 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 addQuestionsReminder.py >> logs/collectResponses.logs 2>&1
 0 0 21 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 collectResponses.py >> logs/collectResponses.logs 2>&1
+0 0 27 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 submissionReminder.py >> logs/shareResponses.logs 2>&1
+59 22 27 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 lastHourReminder.py >> logs/shareResponses.logs 2>&1
 0 0 28 * * cd /home/pi/FredderLoop && source .venv/bin/activate && python3 shareResponses.py >> logs/shareResponses.logs 2>&1
