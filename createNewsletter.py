@@ -79,16 +79,7 @@ def createNewsletter(form: dict, responses: dict) -> tuple[str, list]:
         title=f"{datetime.datetime.now().strftime('%Y-%m')} Gletterloop Newsletter",
     )
     doc_id = doc["documentId"]
-    current_index = (
-        docs_service.documents()
-        .get(documentId=doc_id, fields="body")
-        .execute()
-        .get("body")
-        .get("content")[-1]
-        .get("endIndex")
-    )
-    if current_index == 2:
-        current_index = 1
+    current_index = 1
     processed, emails = _process_responses(form, responses)
     requests = []
 
@@ -115,36 +106,9 @@ def createNewsletter(form: dict, responses: dict) -> tuple[str, list]:
     tmp, _ = docUtil.update_font(curr_ind=current_index)
     requests.extend(tmp)
 
-    # submit changes
-    # print()
-    # print()
-    # print()
-    # ind = 0
-    # with open("temp3.py", "w+") as tmp_f:
-    #     with open("temp4.py", "w+") as tmp_f2:
-    #         # requests = requests[0:29]
-    #         tmp_f.write("{")
-    #         for request in requests:
-    #             req = copy.deepcopy(request)
-    #             req["ind"] = ind
-    #             ind += 1
-    #             tmp_f.write(str(req))
-    #             tmp_f.write(",")
-    #         tmp_f.write("}")
-    #         docs_service.documents().batchUpdate(
-    #             documentId=doc_id, body={"requests": requests}
-    #         ).execute()
-    #         tmp_f2.write(
-    #             str(
-    #                 docs_service.documents()
-    #                 .get(documentId=doc_id)
-    #                 .execute()
-    #                 .get("body")
-    #                 .get("content")
-    #             )
-    #         )
-
+    # push changes
     docs_service.documents().batchUpdate(
         documentId=doc_id, body={"requests": requests}
     ).execute()
+
     return doc_id, emails

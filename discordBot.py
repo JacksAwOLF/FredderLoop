@@ -1,24 +1,11 @@
-import discord
 import requests
 
 from database import getFormId
-from config import DISCORD_LETTERLOOP_CHANNELID, BOT_TOKEN, DISCORD_LETTERLOOP_WEBHOOK
+from config import DISCORD_LETTERLOOP_WEBHOOK
 
 
 def sendDiscordMessage(message):
-    # client = discord.Client(intents=discord.Intents.default())
-
-    # @client.event
-    # async def on_ready():
-    #     channel = client.get_channel(DISCORD_LETTERLOOP_CHANNELID)
-    #     if channel:
-    #         await channel.send(message)
-    #     await client.close()
-    # client.run(BOT_TOKEN)
     requests.post(DISCORD_LETTERLOOP_WEBHOOK, json={"content": message})
-
-
-sendDiscordMessage("hi")
 
 
 def createFormMessage():
@@ -36,7 +23,6 @@ def collectResponsesMessage():
     sendDiscordMessage(message)
 
 
-def shareResponsesMessage():
-    formId = getFormId()
-    message = f"FredderLoop issue over! View responses here: https://docs.google.com/forms/d/{formId}/edit#responses"
+def shareResponsesMessage(doc_id: str):
+    message = f"FredderLoop issue over! View responses here: https://docs.google.com/document/d/{doc_id}/edit"
     sendDiscordMessage(message)

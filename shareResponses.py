@@ -31,4 +31,4 @@ if __name__ == "__main__":
     doc_id, emails = createNewsletter(form=form, responses=responses)
     driveUtil.share_document(drive_service=drive_service, file_id=doc_id, emails=emails)
 
-    shareResponsesMessage()
+    shareResponsesMessage(doc_id)
