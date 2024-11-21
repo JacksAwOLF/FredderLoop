@@ -21,7 +21,7 @@ def _process_responses(form: dict, responses: dict) -> tuple[dict, list]:
     email_mapping = {}
 
     # get only questions and responses
-    for response in responses["responses"]:
+    for response in responses: #["responses"]:
         user_email = response["respondentEmail"]
         for questionId, answer in response["answers"].items():
             question_text = questions[questionId]
