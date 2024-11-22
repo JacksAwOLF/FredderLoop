@@ -1,4 +1,5 @@
 import constants
+import driveUtil
 from config import GOOGLE_DRIVE_FOLDER_ID
 from defaultForm import getDefaultFormHead, defaultFormBody
 from discordBot import createFormMessage
@@ -27,19 +28,8 @@ if __name__ == "__main__":
     ).execute()
 
     # Move the form to specific folderId
-    prevParents = ",".join(
-        drive_service.files().get(fileId=formId, fields="parents").execute()["parents"]
-    )
-
-    file = (
-        drive_service.files()
-        .update(
-            fileId=formId,
-            addParents=GOOGLE_DRIVE_FOLDER_ID,
-            removeParents=prevParents,
-            fields="id, parents",
-        )
-        .execute()
+    driveUtil.move_file_to_folder(
+        drive_service=drive_service, file_id=formId, folder_id=GOOGLE_DRIVE_FOLDER_ID
     )
 
     # save formId in database

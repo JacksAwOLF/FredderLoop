@@ -54,3 +54,24 @@ def add_anyone_write(drive_service, file_id: str) -> None:
         "allowFileDiscovery": False,
     }
     drive_service.permissions().create(fileId=file_id, body=body).execute()
+
+
+def move_file_to_folder(drive_service, file_id: str, folder_id: str) -> str:
+    # Retrieve the existing parents to remove
+    file = drive_service.files().get(fileId=file_id, fields="parents").execute()
+    previous_parents = ",".join(file.get("parents"))
+    print(f"Moving {file_id} from {previous_parents} to {folder_id}")
+
+    # Move the file to the new folder
+    file = (
+        drive_service.files()
+        .update(
+            fileId=file_id,
+            addParents=folder_id,
+            removeParents=previous_parents,
+            fields="id, parents",
+        )
+        .execute()
+    )
+
+    return file.get("parents")
