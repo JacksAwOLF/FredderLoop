@@ -139,6 +139,7 @@ SERVICE_ACCOUNT_CREDENTIALS=<name of json file containing service account key>
 GOOGLE_DRIVE_FOLDER_ID=<last segment of google drive folder url (after last "/") for form location>
 NEWSLETTER_FOLDER_ID=<last segment of google drive folder url (after last "/") for newsletter docs location>
 DISCORD_LETTERLOOP_WEBHOOK=<discord channel webhook, see below for creating>
+DISCORD_LETTERLOOP_DEV_WEBHOOK=<discord channel webhook (used for separate dev/testing channel), see below for creating>
 ```
 
 ### SERVICE_ACCOUNT_CREDENTIALS
