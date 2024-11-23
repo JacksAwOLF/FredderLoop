@@ -1,26 +1,23 @@
 from datetime import datetime
 
+
 def getDefaultFormHead():
-    date = datetime.today().strftime('%Y-%m-%d')
-    return {
-        "info": {
-            "title": date + " LetterLoop Questions",
-            "documentTitle": date
-        }
-    }
+    date = datetime.today().strftime("%Y-%m-%d")
+    return {"info": {"title": date + " LetterLoop Questions", "documentTitle": date}}
 
 
+# https://googleapis.github.io/google-api-python-client/docs/dyn/forms_v1.html
 defaultFormBody = {
     "requests": [
         {
             "updateFormInfo": {
                 "info": {
-                    "description": "Google Forms API is extremely limited so " +
-                        "please double check that 'Collect Email Addresses' is Verified, " +
-                        "'Allow Response Editing' and 'Limit to 1 Response' is turned on in " +
-                        "Settings -> Responses ;)"
+                    "description": "Google Forms API is extremely limited so "
+                    + "please double check that 'Collect Email Addresses' is Verified, "
+                    + "'Allow Response Editing' and 'Limit to 1 Response' is turned on in "
+                    + "Settings -> Responses ;)"
                 },
-                "updateMask": "description"
+                "updateMask": "description",
             }
         },
         {
@@ -31,15 +28,11 @@ defaultFormBody = {
                     "questionItem": {
                         "question": {
                             "required": True,
-                            "textQuestion": {
-                                "paragraph": False
-                            }
+                            "textQuestion": {"paragraph": False},
                         }
-                    }
+                    },
                 },
-                "location": {
-                    "index": 0
-                }
+                "location": {"index": 0},
             }
         },
         {
@@ -47,18 +40,21 @@ defaultFormBody = {
                 "item": {
                     "title": "Alright! Here's a letter loop question",
                     "description": "",
-                    "questionItem": {
-                        "question": {
-                            "textQuestion": {
-                                "paragraph": True
-                            }
-                        }
-                    }
+                    "questionItem": {"question": {"textQuestion": {"paragraph": True}}},
                 },
-                "location": {
-                    "index": 1
-                }
+                "location": {"index": 1},
             }
-        }
+        },
+        {
+            "createItem": {
+                "item": {
+                    "title": "Photo Wall",
+                    "description": "Be sure to update this to collect photos! "
+                    + "TODO: make it do this automatically",
+                    "questionItem": {"question": {"textQuestion": {"paragraph": True}}},
+                },
+                "location": {"index": 2},
+            }
+        },
     ]
 }

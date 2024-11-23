@@ -1,61 +1,34 @@
-from googleCred import credentials
-from apiclient import discovery
-
+import constants
+import driveUtil
+from createNewsletter import createNewsletter
 from database import getFormId
 from discordBot import shareResponsesMessage, sendDiscordMessage
+from services import create_service
 
 if __name__ == "__main__":
-    form_service = discovery.build("forms", "v1", credentials=credentials)
-    drive_service = discovery.build('drive', 'v3', credentials=credentials)
+    form_service = create_service(constants.FORMS_SERVICE)
+    drive_service = create_service(constants.DRIVE_SERVICE)
 
     formId = getFormId()
     if formId == "":
         exit()
 
+    form = (
+        form_service.forms()
+        .get(formId=getFormId())
+        .execute()
+    )
     responses = form_service.forms().responses().list(formId=formId).execute()
 
-    #drive_service.permissions().update(fileId=formId,permissionId="anyoneWithLink",body={'role':'writer'}).execute()
-
-
-    #responses = responses['responses']
-    #print("responses", responses)
-
     # if nobody submitted a response, do nothing
-    if 'responses' not in responses or len(responses['responses']) == 0:
+    if "responses" not in responses or len(responses["responses"]) == 0:
         sendDiscordMessage("Nobody submitted a response this month :(")
         exit()
 
-    responses = responses['responses']
-    print('responses', responses)
+    responses = responses["responses"]
+    print("responses", responses)
 
-    # if didn't collect email addresses, share to everyone
-    if 'respondentEmail' not in responses[0]:
-        drive_service.permissions().update(
-            fileId=formId,
-            permissionId="anyoneWithLink",
-            body={
-                "role": "writer"
-            }
-        ).execute()
+    doc_id, emails = createNewsletter(form=form, responses=responses)
+    driveUtil.share_document(drive_service=drive_service, file_id=doc_id, emails=emails)
 
-        print("added writer role for everyone")
-
-    # if did collect email addresses, only share to people who submitted
-    else:
-        for response in responses:
-            email = response['respondentEmail']
-            print("adding", email)
-            drive_service.permissions().create(
-                fileId=formId,
-                body={
-                    "type": "user",
-                    "emailAddress": email,
-                    "role": "writer"
-                }
-            ).execute()
-
-            print("added writer role for", email)
-
-
-
-    shareResponsesMessage()
+    shareResponsesMessage(doc_id)
