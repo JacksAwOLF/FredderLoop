@@ -224,7 +224,7 @@ def _add_table_answers(
 
         # curr_ind += 1 # don't add another, since added temp earlier
         tmp, curr_ind = _add_paragraph(
-            text="", curr_ind=curr_ind, heading_type=""
+            text="", curr_ind=curr_ind
         )  # add newline
         requests.extend(tmp)
 
@@ -587,7 +587,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
 
         # add newline after table for cleanliness
         tmp, curr_ind = _add_paragraph(
-            text="", curr_ind=curr_ind, heading_type=""
+            text="", curr_ind=curr_ind
         )  # add newline
         requests.extend(tmp)
     return requests, curr_ind

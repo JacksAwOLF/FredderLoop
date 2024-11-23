@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     form = (
         form_service.forms()
-        .get(formId="1MfEowHxVJtuRVN2IvSu74p_4fK3KwbWcvXeUQg9Vp9E")
+        .get(formId=getFormId())
         .execute()
     )
     responses = form_service.forms().responses().list(formId=formId).execute()
