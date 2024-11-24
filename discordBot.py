@@ -1,14 +1,14 @@
 import requests
 
 from database import getFormId
-from config import DISCORD_LETTERLOOP_WEBHOOK, DISCORD_LETTERLOOP_DEV_WEBHOOK
+from config import DISCORD_LETTERLOOP_WEBHOOK
 
 
 def sendDiscordMessage(message: str, production: bool) -> None:
-    url = DISCORD_LETTERLOOP_DEV_WEBHOOK
     if production:
-        url = DISCORD_LETTERLOOP_WEBHOOK
-    requests.post(url, json={"content": message})
+        requests.post(DISCORD_LETTERLOOP_WEBHOOK, json={"content": message})
+    else:
+        print(f"Discord message testing:\n{message}")
 
 
 def createFormMessage(production: bool) -> None:
