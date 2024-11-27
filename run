@@ -1,0 +1,4 @@
+cd /home/pi/FredderLoop
+. .venv/bin/activate
+export FREDDERLOOP_PROD=1
+python3 $1.py >> logs/$1.log

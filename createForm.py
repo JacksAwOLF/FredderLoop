@@ -1,5 +1,3 @@
-import sys
-
 import constants
 from config import GOOGLE_DRIVE_FOLDER_ID
 from defaultForm import getDefaultFormHead, defaultFormBody
@@ -9,12 +7,6 @@ from services import create_service
 
 
 if __name__ == "__main__":
-    production = False # fail to dev mode
-    if len(sys.argv) > 1:
-        # check if "production"
-        if sys.argv[1] == "production":
-            production = True
-        
     form_service = create_service(constants.FORMS_SERVICE)
     drive_service = create_service(constants.DRIVE_SERVICE)
 
@@ -54,4 +46,4 @@ if __name__ == "__main__":
     print("form created: ", form)
     saveFormId(form["formId"])
 
-    createFormMessage(production)
+    createFormMessage()

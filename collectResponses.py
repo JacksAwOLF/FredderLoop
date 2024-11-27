@@ -1,17 +1,9 @@
-import sys
-
 import constants as c
 import services as svc
 from database import getFormId
 from discordBot import collectResponsesMessage
 
 if __name__ == "__main__":
-    production = False # fail to dev mode
-    if len(sys.argv) > 1:
-        # check if "production"
-        if sys.argv[1] == "production":
-            production = True
-            
     drive_service = svc.create_service(c.DRIVE_SERVICE)
 
     formId = getFormId()
@@ -40,4 +32,4 @@ if __name__ == "__main__":
         fileId=formId, body={"type": "anyone", "role": "reader"}
     ).execute()
 
-    collectResponsesMessage(production)
+    collectResponsesMessage()
