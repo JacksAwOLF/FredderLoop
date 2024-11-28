@@ -2,18 +2,22 @@
 
 # constants
 WRITER_PERMISSION = "writer"
+COMMENT_PERMISSION = "commenter"
+valid_permissions = [WRITER_PERMISSION, COMMENT_PERMISSION]
 
 
-def share_document(drive_service, file_id: str, emails: list) -> None:
+def share_document(drive_service, file_id: str, emails: list, permission: str) -> None:
+    if permission not in valid_permissions:
+        raise TypeError(f"unknown permission type: {permission}")
     if type(emails) != list:
         raise TypeError(f"incorrect emails type: {type(emails)}")
     for email in emails:
         print(f"adding: {email}")
         drive_service.permissions().create(
             fileId=file_id,
-            body={"type": "user", "emailAddress": email, "role": WRITER_PERMISSION},
+            body={"type": "user", "emailAddress": email, "role": permission},
         ).execute()
-        print(f"added writer role for: {email}")
+        print(f"added {permission} role for: {email}")
 
 
 # https://developers.google.com/drive/api/guides/manage-sharing#python

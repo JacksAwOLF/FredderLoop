@@ -30,6 +30,11 @@ if __name__ == "__main__":
     driveUtil.move_file_to_folder(
         drive_service=drive_service, file_id=doc_id, folder_id=NEWSLETTER_FOLDER_ID
     )
-    driveUtil.share_document(drive_service=drive_service, file_id=doc_id, emails=emails)
+    driveUtil.share_document(
+        drive_service=drive_service,
+        file_id=doc_id,
+        emails=emails,
+        permission=driveUtil.COMMENT_PERMISSION,
+    )
 
     shareResponsesMessage(doc_id)
