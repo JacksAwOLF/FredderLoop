@@ -15,14 +15,19 @@ def _get_questions(form: dict) -> dict:
 
 
 # https://googleapis.github.io/google-api-python-client/docs/dyn/forms_v1.html
-def _process_responses(form: dict, responses: dict) -> tuple[dict, list]:
+def _process_responses(form: dict, responses: dict) -> tuple[dict, dict]:
     questions = _get_questions(form)
     processed = {}
     email_mapping = {}
 
+    counter = 0
     # get only questions and responses
     for response in responses: #["responses"]:
-        user_email = response["respondentEmail"]
+        if response.get("respondentEmail"):
+            user_email = response["respondentEmail"]
+        else:
+            user_email = f"N/A-{counter}"
+            counter += 1
         for questionId, answer in response["answers"].items():
             question_text = questions[questionId]
             for k, v in answer.items():
@@ -68,10 +73,10 @@ def _process_responses(form: dict, responses: dict) -> tuple[dict, list]:
                 break
             ind += 1
 
-    return final_processed, list(email_mapping.keys())
+    return final_processed, email_mapping
 
 
-def createNewsletter(form: dict, responses: dict) -> tuple[str, list]:
+def createNewsletter(form: dict, responses: dict) -> tuple[str, dict]:
     docs_service = create_service(constants.DOCS_SERVICE)
 
     doc = docUtil.create_document(
@@ -80,7 +85,7 @@ def createNewsletter(form: dict, responses: dict) -> tuple[str, list]:
     )
     doc_id = doc["documentId"]
     current_index = 1
-    processed, emails = _process_responses(form, responses)
+    processed, email_mapping = _process_responses(form, responses)
     requests = []
 
     # add title
@@ -111,4 +116,4 @@ def createNewsletter(form: dict, responses: dict) -> tuple[str, list]:
         documentId=doc_id, body={"requests": requests}
     ).execute()
 
-    return doc_id, emails
+    return doc_id, email_mapping
