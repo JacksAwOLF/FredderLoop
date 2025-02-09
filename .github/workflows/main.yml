@@ -1,20 +1,70 @@
-name: Deploy Code
+name: Run Fredderloop
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '0 0 1 * *'
+    - cron: '0 0 20 * *'
+    - cron: '0 0 21 * *'
+    - cron: '0 0 27 * *'
+    - cron: '57 22 27 * *'
+    - cron: '0 0 28 * *'
 
 jobs:
-  deploy:
-    runs-on: self-hosted
+  run_fredderloop:
+    runs-on: ubuntu-latest
+    env:
+      SERVICE_ACCOUNT_CREDENTIALS_FILE: ${{ secrets.SERVICE_ACCOUNT_CREDENTIALS_FILE }}
+      GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+      NEWSLETTER_FOLDER_ID: ${{ secrets.NEWSLETTER_FOLDER_ID }}
+      DISCORD_LETTERLOOP_WEBHOOK: ${{ secrets.DISCORD_LETTERLOOP_WEBHOOK }}
+      SERVICE_ACCOUNT_CREDENTIALS_BASE64: ${{ secrets.SERVICE_ACCOUNT_CREDENTIALS_BASE64 }}
     steps:
-      - name: Update code
-        uses: actions/checkout@v3
-
-      - name: Run application
+      - name: Mask secrets
         run: |
-          cd /home/pi/FredderLoop 
-          git checkout main
-          git pull origin main
-          crontab /home/pi/FredderLoop/cronjobs
+          echo "::add-mask::$SERVICE_ACCOUNT_CREDENTIALS_FILE"
+          echo "::add-mask::$GOOGLE_DRIVE_FOLDER_ID"
+          echo "::add-mask::$NEWSLETTER_FOLDER_ID"
+          echo "::add-mask::$DISCORD_LETTERLOOP_WEBHOOK"
+          echo "::add-mask::$SERVICE_ACCOUNT_CREDENTIALS_BASE64"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Set up config.py
+        run: |
+          touch config.py
+          echo "SERVICE_ACCOUNT_CREDENTIALS_FILE='$SERVICE_ACCOUNT_CREDENTIALS_FILE'" >> config.py
+          echo "GOOGLE_DRIVE_FOLDER_ID='$GOOGLE_DRIVE_FOLDER_ID'" >> config.py
+          echo "NEWSLETTER_FOLDER_ID='$NEWSLETTER_FOLDER_ID'" >> config.py
+          echo "DISCORD_LETTERLOOP_WEBHOOK='$DISCORD_LETTERLOOP_WEBHOOK'" >> config.py
+      - name: Create Service Account Credentials File
+        run: |
+          echo $SERVICE_ACCOUNT_CREDENTIALS_BASE64 | base64 --decode > $SERVICE_ACCOUNT_CREDENTIALS_FILE
+      - name: Create Form
+        if: github.event.schedule == '0 0 1 * *'
+        run: echo "Starting this month's Fredderloop by creating a form!"
+        run: python createForm.py
+      - name: Reminder to Add Questions
+        if: github.event.schedule == '0 0 20 * *'
+        run: echo "Last day reminder to add questions!"
+        run: python addQuestionsReminder.py
+      - name: Collecting Responses
+        if: github.event.schedule == '0 0 21 * *'
+        run: echo "Starting to collect responses!"
+        run: python collectResponses.py
+      - name: Reminder to Submit Answers
+        if: github.event.schedule == '0 0 27 * *'
+        run: echo "Last day reminder to submit answers!"
+        run: python submissionReminder.py
+      - name: Last Hour Reminder
+        if: github.event.schedule == '57 22 27 * *'
+        run: echo "Last hour reminder to submit answers!"
+        run: python lastHourReminder.py
+      - name: Share Responses
+        if: github.event.schedule == '0 0 28 * *'
+        run: echo "Fredderloop complete, create and share newsletter!"
+        run: python shareResponses.py
+

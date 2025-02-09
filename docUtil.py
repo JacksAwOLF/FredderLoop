@@ -1,4 +1,6 @@
 # docs documentation: https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
+import traceback
+
 import emoji
 
 # constants
@@ -8,14 +10,49 @@ HEADING_2 = "HEADING_2"
 HEADING_3 = "HEADING_3"
 NORMAL_TEXT = "NORMAL_TEXT"
 
+
 # https://developers.google.com/docs/api/reference/rest
 # https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
 def create_document(docs_service, title: str) -> any:
-    # returns document
+    # returns document id
     body = {"title": title}
     return docs_service.documents().create(body=body).execute()
 
-def _add_paragraph(
+
+def get_document(docs_service, file_id: str) -> any:
+    return docs_service.documents().get(documentId=file_id).execute()
+
+
+def _get_last_index(docs_service, file_id: str) -> int:
+    return get_document(docs_service, file_id)["body"]["content"][-1]["endIndex"]
+
+
+def get_last_insert_index(docs_service, file_id: str) -> int:
+    return _get_last_index(docs_service, file_id) - 1
+
+
+def search_latest_text_lower(docs_service, file_id: str, search_string: str) -> str:
+    search_string = search_string.lower()
+    document = get_document(docs_service, file_id)["body"]["content"]
+    for p in reversed(document):
+        try:
+            paragraph_element = p["paragraph"]["elements"][-1]
+            paragraph_text_content = paragraph_element["textRun"]["content"]
+            if search_string in paragraph_text_content.lower():
+                return (
+                    paragraph_text_content.split(":")[-1].strip(),
+                    paragraph_element["endIndex"],
+                )
+        except Exception as e:
+            # no text found, might be table? Ignoring...
+            # raise Exception(e)
+            traceback.print_exc()
+            print("Not basic text, ignoring...")
+            pass
+    print(search_string, "not found")
+
+
+def add_paragraph(
     text: str,
     curr_ind: int,
     heading_type: str = NORMAL_TEXT,
@@ -60,7 +97,7 @@ def _add_table_answers(
         num_rows = -(len(answers) // -num_cols)  # ceiling
 
         # add name
-        tmp, curr_ind = _add_paragraph(
+        tmp, curr_ind = add_paragraph(
             text=name,
             curr_ind=curr_ind,
             heading_type=HEADING_2,
@@ -106,7 +143,7 @@ def _add_table_answers(
             for ans in row:
                 curr_ind += 2
                 # weird google math? 1 for cell and one for newline maybe?
-                tmp, curr_ind = _add_paragraph(
+                tmp, curr_ind = add_paragraph(
                     text=ans,
                     curr_ind=curr_ind,
                     heading_type=NORMAL_TEXT,
@@ -226,16 +263,14 @@ def _add_table_answers(
             )
 
         # curr_ind += 1 # don't add another, since added temp earlier
-        tmp, curr_ind = _add_paragraph(
-            text="", curr_ind=curr_ind
-        )  # add newline
+        tmp, curr_ind = add_paragraph(text="", curr_ind=curr_ind)  # add newline
         requests.extend(tmp)
 
     return requests, curr_ind
 
 
 def add_title(title: str, curr_ind: int) -> tuple[list, int]:
-    return _add_paragraph(text=title, curr_ind=curr_ind, heading_type=TITLE)
+    return add_paragraph(text=title, curr_ind=curr_ind, heading_type=TITLE)
 
 
 def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
@@ -395,7 +430,7 @@ def add_response(response: dict, curr_index: int) -> tuple[list, int]:
     requests = []
     # add question
     question = list(response.keys())[0]
-    tmp, curr_index = _add_paragraph(
+    tmp, curr_index = add_paragraph(
         text=question, curr_ind=curr_index, heading_type=HEADING_1
     )
     requests.extend(tmp)
@@ -413,7 +448,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
 
     # add question
     question = list(response.keys())[0]
-    tmp, curr_ind = _add_paragraph(
+    tmp, curr_ind = add_paragraph(
         text=question, curr_ind=curr_ind, heading_type=HEADING_1
     )
     requests.extend(tmp)
@@ -423,7 +458,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
     for name, photos in response[question].items():
         num_rows = -(len(photos) // -num_cols)  # ceiling
         # add name
-        tmp, curr_ind = _add_paragraph(
+        tmp, curr_ind = add_paragraph(
             text=name,
             curr_ind=curr_ind,
             heading_type=HEADING_2,
@@ -589,9 +624,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
         curr_ind += 1
 
         # add newline after table for cleanliness
-        tmp, curr_ind = _add_paragraph(
-            text="", curr_ind=curr_ind
-        )  # add newline
+        tmp, curr_ind = add_paragraph(text="", curr_ind=curr_ind)  # add newline
         requests.extend(tmp)
     return requests, curr_ind
 
@@ -617,3 +650,13 @@ def update_font(curr_ind: int) -> tuple[list, int]:
         }
     )
     return requests, curr_ind
+
+
+def batch_update(docs_service, file_id: str, requests: list) -> dict:
+    try:
+        docs_service.documents().batchUpdate(
+            documentId=file_id, body={"requests": requests}
+        ).execute()
+        return None
+    except Exception as e:
+        return e

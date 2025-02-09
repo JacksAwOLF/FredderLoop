@@ -50,7 +50,9 @@ def lastHourReminderMessage(names: list) -> None:
 
 
 def shareResponsesMessage(doc_id: str, need_to_add: list) -> None:
-    need_to_add_message = f"\nNeed to share newsletter with these users: {', '.join(need_to_add)}"
+    need_to_add_message = (
+        f"\nNeed to share newsletter with these users: {', '.join(need_to_add)}"
+    )
     message = (
         "FredderLoop issue over!"
         + "\nNew FredderLoop starts on the 1st!"

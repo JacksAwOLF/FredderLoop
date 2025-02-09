@@ -1,5 +1,6 @@
 import constants
 import driveUtil
+import formUtil
 from createNewsletter import createNewsletter
 from config import NEWSLETTER_FOLDER_ID
 from database import getFormId
@@ -14,8 +15,8 @@ if __name__ == "__main__":
     if formId == "":
         exit()
 
-    form = form_service.forms().get(formId=formId).execute()
-    responses = form_service.forms().responses().list(formId=formId).execute()
+    form = formUtil.get_form(form_service=form_service, form_id=formId)
+    responses = formUtil.get_form_responses(form_service=form_service, form_id=formId)
 
     # if nobody submitted a response, do nothing
     if "responses" not in responses or len(responses["responses"]) == 0:
@@ -23,7 +24,6 @@ if __name__ == "__main__":
         exit()
 
     responses = responses["responses"]
-    print("responses", responses)
 
     try:
         doc_id, email_mapping = createNewsletter(form=form, responses=responses)
@@ -34,14 +34,16 @@ if __name__ == "__main__":
                 need_to_add.append(email_mapping[email])
             else:
                 emails.append(email)
-        print(f"emails found: {emails}")
-        print(f"email not found, need to share newsletter with: {need_to_add}")
-        
+        print(f"Number of emails found: {len(emails)}")
+        print(
+            f"Email(s) not found, need to share newsletter with {len(need_to_add)} users"
+        )
+
         # Move from root to Newsletter folder
         driveUtil.move_file_to_folder(
             drive_service=drive_service, file_id=doc_id, folder_id=NEWSLETTER_FOLDER_ID
         )
-        
+
         driveUtil.share_document(
             drive_service=drive_service,
             file_id=doc_id,
@@ -55,8 +57,13 @@ if __name__ == "__main__":
         for response in responses:
             if "respondentEmail" in response:
                 drive_service.permissions().create(
-                    fileId=formId, body={"type": "user", "emailAddress": response["respondentEmail"], "role": "writer"}
+                    fileId=formId,
+                    body={
+                        "type": "user",
+                        "emailAddress": response["respondentEmail"],
+                        "role": "writer",
+                    },
                 ).execute()
 
-                print("sharing form with", response["respondentEmail"])
+                print(f"sharing form with {response['respondentEmail'][0:3]}******")
         shareResponsesMessage(formId, [])
