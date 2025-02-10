@@ -14,7 +14,7 @@ if __name__ == "__main__":
     if formId == "":
         exit()
 
-    form = form_service.forms().get(formId=getFormId()).execute()
+    form = form_service.forms().get(formId=formId).execute()
     responses = form_service.forms().responses().list(formId=formId).execute()
 
     # if nobody submitted a response, do nothing
@@ -25,25 +25,32 @@ if __name__ == "__main__":
     responses = responses["responses"]
     print("responses", responses)
 
-    for i in range(len(responses)):
-        if "respondentEmail" not in responses[i]:
-            responses[i]["respondentEmail"] = "katiehsieh25@gmail.com"
-
     try:
-        doc_id, emails = createNewsletter(form=form, responses=responses)
+        doc_id, email_mapping = createNewsletter(form=form, responses=responses)
+        emails = []
+        need_to_add = []
+        for email in email_mapping.keys():
+            if "N/A-" in email and "@" not in email:
+                need_to_add.append(email_mapping[email])
+            else:
+                emails.append(email)
+        print(f"emails found: {emails}")
+        print(f"email not found, need to share newsletter with: {need_to_add}")
+        
         # Move from root to Newsletter folder
         driveUtil.move_file_to_folder(
             drive_service=drive_service, file_id=doc_id, folder_id=NEWSLETTER_FOLDER_ID
         )
+        
         driveUtil.share_document(
             drive_service=drive_service,
             file_id=doc_id,
             emails=emails,
             permission=driveUtil.COMMENT_PERMISSION,
         )
-        shareResponsesMessage(doc_id)
-    except:
-        print("create newsletter failed")
+        shareResponsesMessage(doc_id, need_to_add)
+    except Exception as e:
+        print(f"create newsletter failed:\n{e}")
 
         for response in responses:
             if "respondentEmail" in response:
@@ -51,6 +58,5 @@ if __name__ == "__main__":
                     fileId=formId, body={"type": "user", "emailAddress": response["respondentEmail"], "role": "writer"}
                 ).execute()
 
-                print("sharing with", response["respondentEmail"])
-        shareResponsesMessage(formId)
-
+                print("sharing form with", response["respondentEmail"])
+        shareResponsesMessage(formId, [])

@@ -27,7 +27,7 @@ def addQuestionsReminderMessage() -> None:
     sendDiscordMessage(message)
 
 
-def collectResponsesMessage():
+def collectResponsesMessage() -> None:
     formId = getFormId()
     message = (
         f"Ready for responses here. Due in a week (28th 00:00): https://docs.google.com/forms/d/{formId}/viewform"
@@ -36,24 +36,26 @@ def collectResponsesMessage():
     sendDiscordMessage(message)
 
 
-def submissionReminderMessage():
+def submissionReminderMessage() -> None:
     formId = getFormId()
     message = f"Last day to submit your answers, due end of day (there is NO auto-submit)! https://docs.google.com/forms/d/{formId}/viewform"
     sendDiscordMessage(message)
 
 
-def lastHourReminderMessage(names):
+def lastHourReminderMessage(names: list) -> None:
     formId = getFormId()
     message = f"Only ONE MORE HOUR to submit your answers (there is NO auto-submit)! https://docs.google.com/forms/d/{formId}/viewform"
     message += f"\n\nCurrent responses: {', '.join(names)}"
     sendDiscordMessage(message)
 
 
-def shareResponsesMessage(doc_id: str):
+def shareResponsesMessage(doc_id: str, need_to_add: list) -> None:
+    need_to_add_message = f"\nNeed to share newsletter with these users: {', '.join(need_to_add)}"
     message = (
         "FredderLoop issue over!"
         + "\nNew FredderLoop starts on the 1st!"
         + "\n"
         + f"\nView newsletter here: https://docs.google.com/document/d/{doc_id}/edit"
+        + need_to_add_message
     )
     sendDiscordMessage(message)
