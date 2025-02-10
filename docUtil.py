@@ -1,4 +1,5 @@
 # docs documentation: https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
+import emoji
 
 # constants
 TITLE = "TITLE"
@@ -112,6 +113,8 @@ def _add_table_answers(
                     newline=False,
                 )
                 requests.extend(tmp)
+                # add 1 ind per emoji in answer due to how Google Docs handles emoji's
+                curr_ind += emoji.emoji_count(ans)
 
         # delete random newline from table insert
         requests.append(
