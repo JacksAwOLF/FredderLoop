@@ -1,13 +1,41 @@
 name: Run Fredderloop
 
 on:
+  workflow_dispatch:
+    inputs:
+      eventType:
+        description: 'Run type'
+        required: true
+        default: 'mone'
+        type: choice
+        options:
+          - none
+          - start
+          - remind_questions
+          - collect_answers
+          - remind_answers_day
+          - remind_answers_last
+          - finish
+      isProduction:
+        description: 'Is production, post to discord'
+        required: false
+        type: boolean
   schedule:
-    - cron: '0 0 1 * *'
-    - cron: '0 0 20 * *'
-    - cron: '0 0 21 * *'
-    - cron: '0 0 27 * *'
-    - cron: '57 22 27 * *'
-    - cron: '0 0 28 * *'
+    # 00:00 PST from week 2 Nov to week 1 Mar
+    # daylight savings off (UTC-8)
+    - cron: '0 8 1 12,1-3 *'
+    - cron: '0 8 20 11,1-2 *'
+    - cron: '0 8 21 11,1-2 *'
+    - cron: '0 8 27 11,1-2 *'
+    - cron: '57 6 27 11,1-2 *'
+    - cron: '0 8 28 11,1-2 *'
+    # daylight savings on (UTC-7)
+    - cron: '0 7 1 4-11 *'
+    - cron: '0 7 20 3-10 *'
+    - cron: '0 7 21 3-10 *'
+    - cron: '0 7 27 3-10 *'
+    - cron: '57 5 27 3-10 *'
+    - cron: '0 7 28 3-10 *'
 
 jobs:
   run_fredderloop:
@@ -19,6 +47,7 @@ jobs:
       NEWSLETTER_FOLDER_ID: ${{ secrets.NEWSLETTER_FOLDER_ID }}
       DISCORD_LETTERLOOP_WEBHOOK: ${{ secrets.DISCORD_LETTERLOOP_WEBHOOK }}
       SERVICE_ACCOUNT_CREDENTIALS_BASE64: ${{ secrets.SERVICE_ACCOUNT_CREDENTIALS_BASE64 }}
+      FREDDERLOOP_PROD: ${{ inputs.isProduction }}
     steps:
       - name: Mask secrets
         run: |
@@ -36,7 +65,6 @@ jobs:
         run: |
           python -m venv .venv
           . .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
           pip install -r requirements.txt
       - name: Set up config.py
         run: |
@@ -49,27 +77,39 @@ jobs:
         run: |
           echo $SERVICE_ACCOUNT_CREDENTIALS_BASE64 | base64 --decode > $SERVICE_ACCOUNT_CREDENTIALS_FILE
       - name: Create Form
-        if: github.event.schedule == '0 0 1 * *'
-        run: echo "Starting this month's Fredderloop by creating a form!"
-        run: python createForm.py
+        if: github.event.schedule == '0 8 1 12,1-3 *' || github.event.schedule == '0 7 1 4-11 *' || inputs.eventType == 'start'
+        run: |
+          . .venv/bin/activate
+          echo "Starting this month's Fredderloop by creating a form!"
+          python createForm.py
       - name: Reminder to Add Questions
-        if: github.event.schedule == '0 0 20 * *'
-        run: echo "Last day reminder to add questions!"
-        run: python addQuestionsReminder.py
+        if: github.event.schedule == '0 8 20 11,1-2 *' || github.event.schedule == '0 7 20 3-10 *' || inputs.eventType == 'remind_questions'
+        run: |
+          . .venv/bin/activate
+          echo "Last day reminder to add questions!"
+          python addQuestionsReminder.py
       - name: Collecting Responses
-        if: github.event.schedule == '0 0 21 * *'
-        run: echo "Starting to collect responses!"
-        run: python collectResponses.py
+        if: github.event.schedule == '0 8 21 11,1-2 *' || github.event.schedule == '0 7 21 3-10 *' || inputs.eventType == 'collect_answers'
+        run: |
+          . .venv/bin/activate
+          echo "Starting to collect responses!"
+          python collectResponses.py
       - name: Reminder to Submit Answers
-        if: github.event.schedule == '0 0 27 * *'
-        run: echo "Last day reminder to submit answers!"
-        run: python submissionReminder.py
+        if: github.event.schedule == '0 8 27 11,1-2 *' || github.event.schedule == '0 7 27 3-10 *' || inputs.eventType == 'remind_answers_day'
+        run: |
+          . .venv/bin/activate
+          echo "Last day reminder to submit answers!"
+          python submissionReminder.py
       - name: Last Hour Reminder
-        if: github.event.schedule == '57 22 27 * *'
-        run: echo "Last hour reminder to submit answers!"
-        run: python lastHourReminder.py
+        if: github.event.schedule == '57 6 27 11,1-2 *' || github.event.schedule == '57 5 27 3-10 *' || inputs.eventType == 'remind_answers_last'
+        run: |
+          . .venv/bin/activate
+          echo "Last hour reminder to submit answers!"
+          python lastHourReminder.py
       - name: Share Responses
-        if: github.event.schedule == '0 0 28 * *'
-        run: echo "Fredderloop complete, create and share newsletter!"
-        run: python shareResponses.py
+        if: github.event.schedule == '0 8 28 11,1-2 *' || github.event.schedule == '0 7 28 3-10 *' || inputs.eventType == 'finish'
+        run: |
+          . .venv/bin/activate
+          echo "Fredderloop complete, create and share newsletter!"
+          python shareResponses.py
 
