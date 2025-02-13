@@ -47,7 +47,6 @@ jobs:
       NEWSLETTER_FOLDER_ID: ${{ secrets.NEWSLETTER_FOLDER_ID }}
       DISCORD_LETTERLOOP_WEBHOOK: ${{ secrets.DISCORD_LETTERLOOP_WEBHOOK }}
       SERVICE_ACCOUNT_CREDENTIALS_BASE64: ${{ secrets.SERVICE_ACCOUNT_CREDENTIALS_BASE64 }}
-      FREDDERLOOP_PROD: ${{ inputs.isProduction }}
     steps:
       - name: Mask secrets
         run: |
@@ -56,6 +55,9 @@ jobs:
           echo "::add-mask::$NEWSLETTER_FOLDER_ID"
           echo "::add-mask::$DISCORD_LETTERLOOP_WEBHOOK"
           echo "::add-mask::$SERVICE_ACCOUNT_CREDENTIALS_BASE64"
+      - name: Is prod run
+        if: github.event_name == 'schedule' || inputs.isProduction
+        run: echo "FREDDERLOOP_PROD=true" >>  "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
