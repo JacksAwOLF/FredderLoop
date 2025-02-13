@@ -3,13 +3,14 @@ import traceback
 
 import config
 import docUtil
+import masker
 
 databaseDir = "./database"
 formIdDir = databaseDir + "/formId"
 
 
 def initDatabase():
-    print("Not running on-prem, no need to initDatabase")
+    masker.log("Not running on-prem, no need to initDatabase")
     pass
     # if not os.path.isdir("./database"):
     #     os.mkdir(databaseDir)
@@ -20,18 +21,20 @@ def saveFormId(docs_service, formId):
     # initDatabase()
     # with open(formIdDir, "w") as f:
     #     f.write(formId)
-    
-    
+
+
 def pushToDatabase(docs_service, content):
     insert_index = docUtil.get_last_insert_index(
         docs_service=docs_service, file_id=config.DOC_ID_DOCUMENT_ID
     )
-    request, curr_index = docUtil.add_paragraph(
-        content, insert_index
-    )
+    request, curr_index = docUtil.add_paragraph(content, insert_index)
     err = docUtil.batch_update(docs_service, config.DOC_ID_DOCUMENT_ID, request)
     if not err:
-        print(traceback.format_exception(type(err), err, err.__traceback__))
+        masker.log(
+            " ".join(
+                map(str, traceback.format_exception(type(err), err, err.__traceback__))
+            )
+        )
     # initDatabase()
     # with open(formIdDir, "w") as f:
     #     f.write(formId)

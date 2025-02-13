@@ -1,6 +1,7 @@
 import constants
 import driveUtil
 import formUtil
+import masker
 from createNewsletter import createNewsletter
 from config import NEWSLETTER_FOLDER_ID
 from database import getFormId
@@ -34,8 +35,8 @@ if __name__ == "__main__":
                 need_to_add.append(email_mapping[email])
             else:
                 emails.append(email)
-        print(f"Number of emails found: {len(emails)}")
-        print(
+        masker.log(f"Number of emails found: {len(emails)}")
+        masker.log(
             f"Email(s) not found, need to share newsletter with {len(need_to_add)} users"
         )
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         )
         shareResponsesMessage(doc_id, need_to_add)
     except Exception as e:
-        print(f"create newsletter failed:\n{e}")
+        masker.log(f"create newsletter failed:\n{e}")
 
         for response in responses:
             if "respondentEmail" in response:
@@ -65,5 +66,5 @@ if __name__ == "__main__":
                     },
                 ).execute()
 
-                print(f"sharing form with {response['respondentEmail'][0:3]}******")
+                masker.log(f"sharing form with {response['respondentEmail'][0:3]}******")
         shareResponsesMessage(formId, [])

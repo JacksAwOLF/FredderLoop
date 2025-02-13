@@ -1,5 +1,7 @@
 # docs documentation: https://googleapis.github.io/google-api-python-client/docs/dyn/drive_v3.html
 
+import masker
+
 # constants
 WRITER_PERMISSION = "writer"
 COMMENT_PERMISSION = "commenter"
@@ -12,12 +14,12 @@ def share_document(drive_service, file_id: str, emails: list, permission: str) -
     if type(emails) != list:
         raise TypeError(f"incorrect emails type: {type(emails)}")
     for email in emails:
-        print(f"adding: {email[0:3]}******")
+        masker.log(f"adding: {email[0:3]}******")
         drive_service.permissions().create(
             fileId=file_id,
             body={"type": "user", "emailAddress": email, "role": permission},
         ).execute()
-        print(f"added {permission} role for: {email[0:3]}******")
+        masker.log(f"added {permission} role for: {email[0:3]}******")
 
 
 # https://developers.google.com/drive/api/guides/manage-sharing#python
@@ -25,7 +27,7 @@ def _transfer_ownership(
     drive_service, file_id: str, permission_id: str, email: str
 ) -> None:
     # https://issuetracker.google.com/issues/228791253
-    print(
+    masker.log(
         "Currently Drive does not support changing the ownership for items which are owned by gmail.com accounts; it's supported for Workspace accounts."
     )
 
@@ -80,23 +82,23 @@ def remove_all_permissions(drive_service, file_id: str) -> None:
             ).execute()
             num_permissions_removed += 1
 
-    print(f"Removed {num_permissions_removed} non-owner permissions")
+    masker.log(f"Removed {num_permissions_removed} non-owner permissions")
 
 
 def trash_document(drive_service, file_id: str) -> None:
-    print(f"Trashing document: {file_id[0:3]}******")
+    masker.log(f"Trashing document: {file_id[0:3]}******")
     body = {"trashed": True}
     drive_service.files().update(fileId=file_id, body=body).execute()
 
 
 def untrash_file(drive_service, file_id: str) -> None:
-    print(f"Attempting to untrash file: {file_id[0:3]}******")
+    masker.log(f"Attempting to untrash file: {file_id[0:3]}******")
     body = {"trashed": False}
     drive_service.files().update(fileId=file_id, body=body).execute()
 
 
 def add_anyone_write(drive_service, file_id: str) -> None:
-    print(f"Adding anyoneWithLink can write permission: {file_id[0:3]}******")
+    masker.log(f"Adding anyoneWithLink can write permission: {file_id[0:3]}******")
     body = {
         "type": "anyone",
         "role": "writer",
@@ -109,7 +111,7 @@ def move_file_to_folder(drive_service, file_id: str, folder_id: str) -> str:
     # Retrieve the existing parents to remove
     file = drive_service.files().get(fileId=file_id, fields="parents").execute()
     previous_parents = ",".join(file.get("parents"))
-    print(
+    masker.log(
         f"Moving {file_id[0:3]}****** from {previous_parents[0:3]}****** to {folder_id[0:3]}******"
     )
 
@@ -130,6 +132,7 @@ def move_file_to_folder(drive_service, file_id: str, folder_id: str) -> str:
 
 def list_files(drive_service, query: str = None) -> dict:
     return drive_service.files().list(q=query).execute()
+
 
 def search_files_by_name(drive_service, name: str, query: str = None) -> dict:
     results = {}

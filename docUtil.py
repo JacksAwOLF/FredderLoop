@@ -3,6 +3,8 @@ import traceback
 
 import emoji
 
+import masker
+
 # constants
 TITLE = "TITLE"
 HEADING_1 = "HEADING_1"
@@ -45,11 +47,14 @@ def search_latest_text_lower(docs_service, file_id: str, search_string: str) -> 
                 )
         except Exception as e:
             # no text found, might be table? Ignoring...
-            # raise Exception(e)
-            traceback.print_exc()
-            print("Not basic text, ignoring...")
+            masker.log(
+                " ".join(
+                    map(str, traceback.format_exception(type(e), e, e.__traceback__))
+                )
+            )
+            masker.log("Not basic text, ignoring...")
             pass
-    print(search_string, "not found")
+    masker.log(search_string, "not found")
 
 
 def add_paragraph(

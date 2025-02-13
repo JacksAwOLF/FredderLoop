@@ -1,6 +1,7 @@
 import constants
 import driveUtil
 import formUtil
+import masker
 from config import GOOGLE_DRIVE_FOLDER_ID
 from discordBot import createFormMessage
 from database import saveFormId
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     )
 
     # save formId in database
-    print(f"form created: {formId[0:3]}********")
+    masker.log(f"form created: {formId[0:3]}********")
     saveFormId(form["formId"])
 
     createFormMessage()

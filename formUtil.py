@@ -65,7 +65,7 @@ def process_responses(form: dict, responses: dict) -> tuple[dict, dict]:
                         elif "fileId" in ans.keys():
                             processed[question_text][user_email].append(ans["fileId"])
                         else:
-                            print(f"ERROR: Unknown answer types {answer_block.keys()}")
+                            masker.log(f"ERROR: Unknown answer types {answer_block.keys()}")
                     break
 
     final_processed = []

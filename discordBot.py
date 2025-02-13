@@ -1,6 +1,7 @@
 import requests
 import os
 
+import masker
 from database import getFormId
 from config import DISCORD_LETTERLOOP_WEBHOOK
 
@@ -9,7 +10,7 @@ def sendDiscordMessage(message: str) -> None:
     if "FREDDERLOOP_PROD" in os.environ:
         requests.post(DISCORD_LETTERLOOP_WEBHOOK, json={"content": message})
     else:
-        print(f"Discord message testing:\n{message}")
+        masker.log(f"Discord message testing:\n{message}")
 
 
 def createFormMessage() -> None:
