@@ -46,6 +46,7 @@ jobs:
       GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
       NEWSLETTER_FOLDER_ID: ${{ secrets.NEWSLETTER_FOLDER_ID }}
       DISCORD_LETTERLOOP_WEBHOOK: ${{ secrets.DISCORD_LETTERLOOP_WEBHOOK }}
+      DOC_ID_DOCUMENT_ID: ${{ secrets.DOC_ID_DOCUMENT_ID }}
       SERVICE_ACCOUNT_CREDENTIALS_BASE64: ${{ secrets.SERVICE_ACCOUNT_CREDENTIALS_BASE64 }}
     steps:
       - name: Mask secrets
@@ -53,6 +54,7 @@ jobs:
           echo "::add-mask::$SERVICE_ACCOUNT_CREDENTIALS_FILE"
           echo "::add-mask::$GOOGLE_DRIVE_FOLDER_ID"
           echo "::add-mask::$NEWSLETTER_FOLDER_ID"
+          echo "::add-mask::$DOC_ID_DOCUMENT_ID"
           echo "::add-mask::$DISCORD_LETTERLOOP_WEBHOOK"
           echo "::add-mask::$SERVICE_ACCOUNT_CREDENTIALS_BASE64"
       - name: Is prod run
@@ -74,6 +76,7 @@ jobs:
           echo "SERVICE_ACCOUNT_CREDENTIALS_FILE='$SERVICE_ACCOUNT_CREDENTIALS_FILE'" >> config.py
           echo "GOOGLE_DRIVE_FOLDER_ID='$GOOGLE_DRIVE_FOLDER_ID'" >> config.py
           echo "NEWSLETTER_FOLDER_ID='$NEWSLETTER_FOLDER_ID'" >> config.py
+          echo "DOC_ID_DOCUMENT_ID='$DOC_ID_DOCUMENT_ID'" >> config.py
           echo "DISCORD_LETTERLOOP_WEBHOOK='$DISCORD_LETTERLOOP_WEBHOOK'" >> config.py
       - name: Create Service Account Credentials File
         run: |
