@@ -1,9 +1,11 @@
-# docs documentation: https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
+"""Module containing docs helper functions"""
+
+# https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
 import traceback
 
 import emoji
 
-import masker
+from src.utils import masker
 
 # constants
 TITLE = "TITLE"
@@ -16,24 +18,29 @@ NORMAL_TEXT = "NORMAL_TEXT"
 # https://developers.google.com/docs/api/reference/rest
 # https://googleapis.github.io/google-api-python-client/docs/dyn/docs_v1.documents.html
 def create_document(docs_service, title: str) -> any:
+    """Create document"""
     # returns document id
     body = {"title": title}
     return docs_service.documents().create(body=body).execute()
 
 
 def get_document(docs_service, file_id: str) -> any:
+    """Get document (details)"""
     return docs_service.documents().get(documentId=file_id).execute()
 
 
 def _get_last_index(docs_service, file_id: str) -> int:
+    """Get last index in document"""
     return get_document(docs_service, file_id)["body"]["content"][-1]["endIndex"]
 
 
 def get_last_insert_index(docs_service, file_id: str) -> int:
+    """Get last index usable for inserts in document"""
     return _get_last_index(docs_service, file_id) - 1
 
 
 def search_latest_text_lower(docs_service, file_id: str, search_string: str) -> str:
+    """Return last content with specified search term"""
     search_string = search_string.lower()
     document = get_document(docs_service, file_id)["body"]["content"]
     for p in reversed(document):
@@ -41,10 +48,7 @@ def search_latest_text_lower(docs_service, file_id: str, search_string: str) -> 
             paragraph_element = p["paragraph"]["elements"][-1]
             paragraph_text_content = paragraph_element["textRun"]["content"]
             if search_string in paragraph_text_content.lower():
-                return (
-                    paragraph_text_content.split(":")[-1].strip(),
-                    paragraph_element["endIndex"],
-                )
+                return paragraph_text_content.split(":")[-1].strip()
         except Exception as e:
             # no text found, might be table? Ignoring...
             masker.log(
@@ -53,8 +57,8 @@ def search_latest_text_lower(docs_service, file_id: str, search_string: str) -> 
                 )
             )
             masker.log("Not basic text, ignoring...")
-            pass
     masker.log(search_string, "not found")
+    return ""
 
 
 def add_paragraph(
@@ -63,6 +67,7 @@ def add_paragraph(
     heading_type: str = NORMAL_TEXT,
     newline: bool = True,
 ) -> tuple[list, int]:
+    """Add paragraph to document"""
     requests = []
     new_text = text
     if newline:
@@ -163,7 +168,7 @@ def _add_table_answers(
             {
                 "deleteContentRange": {
                     "range": {
-                        # don't know why it needs to be minus 1, maybe am deleting the added newline rather than the random newline?
+                        # maybe deleting the added newline rather than the random newline?
                         "startIndex": og_table_index - 1,
                         "endIndex": og_table_index,
                     }
@@ -176,7 +181,8 @@ def _add_table_answers(
             requests.append(
                 {
                     "updateTableCellStyle": {
-                        "fields": "backgroundColor, borderBottom, borderLeft, borderRight, borderTop",
+                        "fields": "backgroundColor, borderBottom, "
+                        + "borderLeft, borderRight, borderTop",
                         "tableCellStyle": {
                             "backgroundColor": {
                                 "color": {
@@ -275,10 +281,12 @@ def _add_table_answers(
 
 
 def add_title(title: str, curr_ind: int) -> tuple[list, int]:
+    """Add text with title style to document"""
     return add_paragraph(text=title, curr_ind=curr_ind, heading_type=TITLE)
 
 
 def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
+    """Add horizontal rule to document"""
     requests = []
     ind_change = 0
     # Since horizontal rule not supported by Google API, use table w/ top border
@@ -299,7 +307,8 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
     requests.append(
         {
             "updateTableCellStyle": {
-                "fields": "borderBottom, borderLeft, borderRight, borderTop, paddingBottom, paddingLeft, paddingRight, paddingTop",
+                "fields": "borderBottom, borderLeft, borderRight, borderTop,"
+                + " paddingBottom, paddingLeft, paddingRight, paddingTop",
                 "tableCellStyle": {
                     "borderBottom": {
                         "color": {
@@ -421,7 +430,7 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
         {
             "deleteContentRange": {
                 "range": {
-                    # don't know why it needs to be minus 1, maybe am deleting the added newline rather than the random newline?
+                    # maybe deleting the added newline rather than the random newline?
                     "startIndex": curr_ind - 1,
                     "endIndex": curr_ind,
                 }
@@ -432,6 +441,7 @@ def add_horizontal_rule(curr_ind: int) -> tuple[list, int]:
 
 
 def add_response(response: dict, curr_index: int) -> tuple[list, int]:
+    """Add 'response' meaning styled table with answer(s) to document"""
     requests = []
     # add question
     question = list(response.keys())[0]
@@ -449,6 +459,7 @@ def add_response(response: dict, curr_index: int) -> tuple[list, int]:
 
 
 def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
+    """Add photos to document"""
     requests = []
 
     # add question
@@ -491,8 +502,8 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
         # transform photo ids into table-like format first
         transformed_ids = []
         tmp = []
-        for i_id, id in enumerate(photos):
-            tmp.append(id)
+        for i_id, photo_id in enumerate(photos):
+            tmp.append(photo_id)
             if (i_id + 1) % num_cols == 0:
                 transformed_ids.append(tmp)
                 tmp = []
@@ -520,7 +531,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
                             },
                             # "uri": f"https://drive.google.com/uc?export=view&id={photo_id}",
                             # use below for auto convert image type
-                            "uri": f"https://drive.google.com/thumbnail?id="
+                            "uri": "https://drive.google.com/thumbnail?id="
                             + photo_id
                             + "&sz=w1000",
                         },
@@ -635,6 +646,7 @@ def add_photos(response: dict, curr_ind: int) -> tuple[list, int]:
 
 
 def update_font(curr_ind: int) -> tuple[list, int]:
+    """Style all text with desired font"""
     # I only want comic neue bolded, hardcoding it
     requests = []
     requests.append(
@@ -658,6 +670,7 @@ def update_font(curr_ind: int) -> tuple[list, int]:
 
 
 def batch_update(docs_service, file_id: str, requests: list) -> dict:
+    """Execute specified batch of requests"""
     try:
         docs_service.documents().batchUpdate(
             documentId=file_id, body={"requests": requests}

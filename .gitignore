@@ -1,8 +1,4 @@
 config.py
-__pycache__/*
-*.un~
-nohup.out
-fredderlooop*.json
-logs/*
-database/*
-.venv/*
+__pycache__/
+*.json
+.venv

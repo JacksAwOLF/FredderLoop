@@ -1,9 +1,0 @@
-DRIVE_SERVICE = "drive"
-DOCS_SERVICE = "docs"
-FORMS_SERVICE = "forms"
-
-SERVICES = {
-    DRIVE_SERVICE: "v3",
-    DOCS_SERVICE: "v1",
-    FORMS_SERVICE: "v1",
-}

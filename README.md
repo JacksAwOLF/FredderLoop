@@ -1,23 +1,15 @@
-# Letterloop Phibi Edition
+# Fredderloop
 
-Letterloop Phibi Edition is a free alternative to LetterLoop which is only free for the first two issues. Letterloop Phibi Edition helps individuals update each other in monthly issues with all the spicy tea and pics from the previous month. This is implemented using service accounts to keep everyone in suspense (no sneak peeks at responses), but can all be set up to execute as the user account.
-
-## Building
-
-Every push to main will update the crontab code on the Ubuntu server
-the cronjobs to run are in the file cronjobs
+Fredderloop is a basic reimagined version of Letterloop helps individuals update each other in monthly issues with all the spicy tea and pics from the previous month. This is implemented using service accounts to keep everyone in suspense (no sneak peeks at responses), but can all be set up to execute as the user account.
 
 ## Architecture
 
-schedule python scripts to run periodically with crontab -e on ubuntu server
-
-(github stores the crontab file that schedules the scripts and the various scripts to run)
-(setup ubuntu server to listen to github actions to update code and run crontabs)
-(set up google service account to create and manage forms so that users cannot edit / view them easily)
+* Scheduled python scripts running periodically with cron scheduled triggers in Github Actions
+* Google Service Account creating and managing forms/responses so that users can not edit/view them easily
 
 ### Core Files
 
-createForm.py
+create_form.py
 
 - runs at the on the 1st of every month
 - creates a google form with a sharable link in a specified folder
@@ -25,13 +17,13 @@ createForm.py
 - set permissions so that everyone with the link can edit the google form
 - send link to discord channel via webhook
 
-collectResponses.py
+collect_responses.py
 
 - runs on the 21st of every month
 - changes permission so that form is not editable
 - send link to discord channel via webhook
 
-shareResponses.py
+share_responses.py
 
 - runs on the 28th of every month
 - create google doc with all responses and photos
@@ -39,69 +31,38 @@ shareResponses.py
 - comments can be added like with a normal google doc
 - send link to discord channel via webhook
 
-addQuestionsReminder.py
+add_questions_reminder.py
 
 - runs on the 20th of every month
 - send discord message to remind that it's last day to submit questions
 
-submissionReminder.py
+submission_reminder.py
 
 - runs on the 27th of every month
 - send discord message to remind that it's last day to submit responses
 
-lastHourReminder.py
+last_hour_reminder.py
 
-- runs at 22:59 on the 27th of every month
+- runs the last hour of the 27th of every month
 - send discord message for last hour reminders to submit responses
 
-(optional)
-reminders.py
+### Database
 
-- runs a day before shareResponses run
-- boot up discord bot to remind people who haven’t submitted
-- this means bot will have to maintain a set of people who are in letterloop and a set of people who have submitted the form
-- this could mean maybe give bot access to user and roles in the server
-- this could mean have a field in form to specify discord username or email
-- the above notifications will be sent to everyone in the specified channel rather than per person
+In the current iteration, the database is just a Google Drive docs with each form id stored on separate lines. This is definitely not out of laziness and taking advantage of another piece that's already built and is for simplifying the overall design of the project.
 
-### Helper files
+See the below image for an example of what this looks like:
 
-database.py and database
+![image of docs database](images/docs_database.png)
 
-- stores the formId of the created google form for ease of access
+## Setting up Github Actions
 
-googleCred.py
+1. Add the configs from the config.py file as individual Github Actions secrets (making sure the naming and case matches the workflow)
+2. Once you have the service account credentials stored in the file specified in the config, use the following command to get the base64 string you should save into the `SERVICE_ACCOUNT_CREDENTIALS_BASE64` secret.
+3. Once you execute `cat <filename> | base64 > <tmp file>`, be sure to remove any newlines created and the entire base64 string should be one line/continuous string. Otherwise Github actions will not recognize the content.
+4. Once the secrets are set up, the cron schedule will execute as scheduled as long as the workflow file is on the default branch.
+5. The workflows is also set up such that if you can manually trigger the desired workflow and specify if the Discord webhook should be triggered or if the message (file id's + emails masked) should be printed to stdout instead.
 
-- returns the google credentials
-
-defaultForm.py
-
-- contains default questions to populate the FredderLoop
-
-discordBot.py
-
-- has a function to send a single message to discord server
-
-docUtil.py
-
-- contains the functions to interact with the Docs and create the newsletter
-
-driveUtil.py
-
-- contains the functions to interact with the Drive instance like file permissions
-
-createNewsletter.py
-
-- contains the function to process the form and responses to create the newsletter in a Doc
-
-services.py
-
-- contains a generic function to create specified service, eliminating version mismatch
-
-constants.py
-
-- contains the various service names and versions
-- TODO: move contents to `services.py`, not necessary to live in separate file
+![Workflow trigger](images/workflow_trigger.png)
 
 ## Local Development
 
@@ -139,7 +100,7 @@ SERVICE_ACCOUNT_CREDENTIALS=<name of json file containing service account key>
 GOOGLE_DRIVE_FOLDER_ID=<last segment of google drive folder url (after last "/") for form location>
 NEWSLETTER_FOLDER_ID=<last segment of google drive folder url (after last "/") for newsletter docs location>
 DISCORD_LETTERLOOP_WEBHOOK=<discord channel webhook, see below for creating>
-DISCORD_LETTERLOOP_DEV_WEBHOOK=<discord channel webhook (used for separate dev/testing channel), see below for creating>
+DOC_ID_DOCUMENT_ID=<file id of database document>
 ```
 
 ### SERVICE_ACCOUNT_CREDENTIALS

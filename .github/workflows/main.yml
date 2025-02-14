@@ -70,14 +70,14 @@ jobs:
           python -m venv .venv
           . .venv/bin/activate
           pip install -r requirements.txt
-      - name: Set up config.py
+      - name: Set up src/config.py
         run: |
           touch config.py
-          echo "SERVICE_ACCOUNT_CREDENTIALS_FILE='$SERVICE_ACCOUNT_CREDENTIALS_FILE'" >> config.py
-          echo "GOOGLE_DRIVE_FOLDER_ID='$GOOGLE_DRIVE_FOLDER_ID'" >> config.py
-          echo "NEWSLETTER_FOLDER_ID='$NEWSLETTER_FOLDER_ID'" >> config.py
-          echo "DOC_ID_DOCUMENT_ID='$DOC_ID_DOCUMENT_ID'" >> config.py
-          echo "DISCORD_LETTERLOOP_WEBHOOK='$DISCORD_LETTERLOOP_WEBHOOK'" >> config.py
+          echo "SERVICE_ACCOUNT_CREDENTIALS_FILE='$SERVICE_ACCOUNT_CREDENTIALS_FILE'" >> src/config.py
+          echo "GOOGLE_DRIVE_FOLDER_ID='$GOOGLE_DRIVE_FOLDER_ID'" >> src/config.py
+          echo "NEWSLETTER_FOLDER_ID='$NEWSLETTER_FOLDER_ID'" >> src/config.py
+          echo "DOC_ID_DOCUMENT_ID='$DOC_ID_DOCUMENT_ID'" >> src/config.py
+          echo "DISCORD_LETTERLOOP_WEBHOOK='$DISCORD_LETTERLOOP_WEBHOOK'" >> src/config.py
       - name: Create Service Account Credentials File
         run: |
           echo $SERVICE_ACCOUNT_CREDENTIALS_BASE64 | base64 --decode > $SERVICE_ACCOUNT_CREDENTIALS_FILE
@@ -86,35 +86,34 @@ jobs:
         run: |
           . .venv/bin/activate
           echo "Starting this month's Fredderloop by creating a form!"
-          python createForm.py
+          python create_form.py
       - name: Reminder to Add Questions
         if: github.event.schedule == '59 7 20 11,1-2 *' || github.event.schedule == '59 6 20 3-10 *' || inputs.eventType == 'remind_questions'
         run: |
           . .venv/bin/activate
           echo "Last day reminder to add questions!"
-          python addQuestionsReminder.py
+          python add_questions_reminder.py
       - name: Collecting Responses
         if: github.event.schedule == '59 7 21 11,1-2 *' || github.event.schedule == '59 6 21 3-10 *' || inputs.eventType == 'collect_answers'
         run: |
           . .venv/bin/activate
           echo "Starting to collect responses!"
-          python collectResponses.py
+          python collect_responses.py
       - name: Reminder to Submit Answers
         if: github.event.schedule == '59 7 27 11,1-2 *' || github.event.schedule == '59 6 27 3-10 *' || inputs.eventType == 'remind_answers_day'
         run: |
           . .venv/bin/activate
           echo "Last day reminder to submit answers!"
-          python submissionReminder.py
+          python submission_reminder.py
       - name: Last Hour Reminder
         if: github.event.schedule == '57 6 27 11,1-2 *' || github.event.schedule == '57 5 27 3-10 *' || inputs.eventType == 'remind_answers_last'
         run: |
           . .venv/bin/activate
           echo "Last hour reminder to submit answers!"
-          python lastHourReminder.py
+          python last_hour_reminder.py
       - name: Share Responses
         if: github.event.schedule == '59 7 28 11,1-2 *' || github.event.schedule == '59 6 28 3-10 *' || inputs.eventType == 'finish'
         run: |
           . .venv/bin/activate
           echo "Fredderloop complete, create and share newsletter!"
-          python shareResponses.py
-
+          python share_responses.py
